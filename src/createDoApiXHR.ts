@@ -1,6 +1,14 @@
-export default function createDoApiXHR(pushwooshUrl: string, logger: any) {
+import {logError, logDebug} from './logger';
+
+function logAndRejectError(error: string, reject: (e: any) => void) {
+  const logText = new Error(error);
+  logError(logText);
+  reject(logText);
+}
+
+export default function createDoApiXHR(pushwooshUrl: string) {
   return function doApiXHR(methodName: string, request: any) {
-    logger.debug(`Performing ${methodName} call to Pushwoosh with arguments: ${JSON.stringify(request)}`);
+    logDebug(`Performing ${methodName} call to Pushwoosh with arguments: ${JSON.stringify(request)}`)
     return new Promise((resolve, reject) => {
       try {
         const xhr = new XMLHttpRequest();
@@ -10,35 +18,27 @@ export default function createDoApiXHR(pushwooshUrl: string, logger: any) {
         xhr.open('POST', url, true);
         xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
         xhr.onload = function xhrOnLoad() {
-          if (this.status == 200) { // eslint-disable-line eqeqeq
+          if (this.status == 200) {
             const response = JSON.parse(this.responseText);
-            if (response.status_code == 200) { // eslint-disable-line eqeqeq
-              logger.debug(`${methodName} call to Pushwoosh has been successful`);
+            if (response.status_code == 200) {
+              logDebug(`${methodName} call to Pushwoosh has been successful`);
               resolve(response.response);
             }
             else {
-              const logText = new Error(`Error occurred during the ${methodName} call to Pushwoosh: ${response.status_message}`);
-              logger.error(logText);
-              reject(logText);
+              logAndRejectError(`Error occurred during the ${methodName} call to Pushwoosh: ${response.status_message}`, reject);
             }
           }
           else {
-            const logText = new Error(`Error occurred, status code: ${this.status}`);
-            logger.error(logText);
-            reject(logText);
+            logAndRejectError(`Error occurred, status code: ${this.status}`, reject);
           }
         };
         xhr.onerror = function xhrOnError(e) {
-          const logText = new Error(`Pushwoosh response to ${methodName} call in not ok: ${e}`);
-          logger.error(logText);
-          reject(logText);
+          logAndRejectError(`Pushwoosh response to ${methodName} call in not ok: ${e}`, reject);
         };
         xhr.send(JSON.stringify(params));
       }
       catch (e) {
-        const logText = new Error(`Exception while ${methodName} the device: ${e}`);
-        logger.error(logText);
-        reject(logText);
+        logAndRejectError(`Exception while ${methodName} the device: ${e}`, reject);
       }
     });
   };

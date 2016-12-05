@@ -3,3 +3,11 @@ const levels = {
   info: 2,
   debug: 3
 };
+
+export function logError(error: any) {
+
+}
+
+export function logDebug(mess: any) {
+
+}
