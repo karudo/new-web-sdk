@@ -1,1 +1,2 @@
-import createDoApiXHR from './createDoApiXHR';
+import {keyValue} from './storage'
+keyValue.set('q', 1);
