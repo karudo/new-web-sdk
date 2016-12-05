@@ -1,20 +1,17 @@
-var webpack = require('webpack');
 var path = require('path');
-var WebpackNotifierPlugin = require('webpack-notifier');
+var webpack = require('webpack');
+
+var production = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  devtool: 'eval',
-  entry: [
-    // Add the react hot loader entry point - in reality, you might only want this in your dev config
-    //'react-hot-loader/patch',
-    'webpack-dev-server/client?http://localhost:3000',
-    'webpack/hot/dev-server',
-    'index.tsx'
-  ],
+  devtool: 'source-map',
+  entry: {
+    'web-notifications': './src/web-notifications.ts',
+    'service-worker': './src/service-worker.ts'
+  },
   output: {
-    filename: 'app.js',
-    publicPath: '/dist',
-    path: path.resolve('dist')
+    path: path.join(__dirname, 'dist'),
+    filename: 'pushwoosh-[name].' + (production ? '' : 'uncompress.') + 'js'
   },
   resolve: {
     extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
@@ -30,12 +27,24 @@ module.exports = {
     ],
     */
     loaders: [
-      { test: /\.tsx?$/, loaders: ['babel', 'ts-loader'] }
+      {
+        test: /\.ts$/, loaders: ['ts-loader']
+      }
     ]
   },
   plugins: [
-    // Add the HMR plugin
-    new webpack.HotModuleReplacementPlugin(),
-    new WebpackNotifierPlugin({ alwaysNotify: true })
-  ]
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    production && new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        pure_getters: true,
+        unsafe: true,
+        unsafe_comps: true,
+        warnings: false
+      },
+      mangle: true,
+      output: {
+        comments: false
+      }
+    })
+  ].filter(function (x) { return x; })
 };
