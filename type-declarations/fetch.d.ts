@@ -42,6 +42,7 @@ interface Response extends Body {
   clone(): Response;
 }
 
-declare const fetch: {
-  (url: string, options?: FetchOptions): Promise<Response>;
-};
+interface Window {
+  fetch(url: string, options?: FetchOptions): Promise<Response>;
+}
+declare const fetch: typeof window.fetch;
