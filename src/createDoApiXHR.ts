@@ -8,7 +8,7 @@ function logAndRejectError(error: string, reject: (e: any) => void) {
 
 export default function createDoApiXHR(pushwooshUrl: string) {
   return function doApiXHR(methodName: string, request: any) {
-    logDebug(`Performing ${methodName} call to Pushwoosh with arguments: ${JSON.stringify(request)}`)
+    logDebug(`Performing ${methodName} call to Pushwoosh with arguments: ${JSON.stringify(request)}`);
     return new Promise((resolve, reject) => {
       try {
         const xhr = new XMLHttpRequest();

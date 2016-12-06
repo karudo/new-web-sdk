@@ -1,4 +1,6 @@
-interface SuccessEevetTarget extends EventTarget {
+import Logger from './logger';
+
+interface IEevetTargetWithResult extends EventTarget {
   result: IDBDatabase;
 }
 
@@ -12,6 +14,10 @@ const objectStoreMessagesName = 'messages';
 
 let instance: IDBDatabase;
 
+function onversionchange(event: any) {
+  Logger.info('onversionchange', event);
+}
+
 function getInstance(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (instance) {
@@ -20,10 +26,8 @@ function getInstance(): Promise<IDBDatabase> {
     else {
       const request: IDBOpenDBRequest = indexedDB.open('PUSHWOOSH_SDK_STORE', 3);
       request.onsuccess = (event) => {
-        const database: IDBDatabase = (event.target as SuccessEevetTarget).result;
-        database.onversionchange = (event: any) => {
-          console.info('onversionchange', event);
-        };
+        const database: IDBDatabase = (event.target as IEevetTargetWithResult).result;
+        database.onversionchange = onversionchange;
         if (instance) {
           database.close();
           resolve(instance);
@@ -33,34 +37,29 @@ function getInstance(): Promise<IDBDatabase> {
           resolve(database);
         }
       };
-      request.onerror = (event) => {
-        reject(event);
-      };
+
+      request.onerror = () => reject(request.error);
+
       request.onupgradeneeded = (event) => {
-        const database: IDBDatabase = (event.target as SuccessEevetTarget).result;
-        database.onversionchange = (event: any) => {
-          console.info('onversionchange', event);
-        };
+        const database: IDBDatabase = (event.target as IEevetTargetWithResult).result;
+        database.onversionchange = onversionchange;
+
         if (!database.objectStoreNames.contains(objectStoreKeyValueName)) {
           database.createObjectStore(objectStoreKeyValueName, {
             keyPath: 'key'
           });
         }
+
+        const autoIncrementId = {keyPath: 'id', autoIncrement: true};
+        const uniqueFalse = {unique: false};
         if (!database.objectStoreNames.contains(objectStoreLogName)) {
-          const logStore = database.createObjectStore(objectStoreLogName, {
-            keyPath: 'id',
-            autoIncrement: true
-          });
-          logStore.createIndex('date', 'date', {unique: false});
-          logStore.createIndex('type', 'type', {unique: false});
+          const logStore = database.createObjectStore(objectStoreLogName, autoIncrementId);
+          logStore.createIndex('date', 'date', uniqueFalse);
+          logStore.createIndex('type', 'type', uniqueFalse);
         }
         if (!database.objectStoreNames.contains(objectStoreMessagesName)) {
-          const messagesStore = database.createObjectStore(objectStoreMessagesName, {
-            keyPath: 'id',
-            autoIncrement: true
-          });
-          messagesStore.createIndex('date', 'date', {unique: false});
-          messagesStore.createIndex('type', 'type', {unique: false});
+          const messagesStore = database.createObjectStore(objectStoreMessagesName, autoIncrementId);
+          messagesStore.createIndex('date', 'date', uniqueFalse);
         }
       };
     }
@@ -94,7 +93,7 @@ function createKeyValue(name: string) {
         request.onsuccess = () => {
           const {result} = request;
           resolve(result.reduce((acc: any, obj: any) => {
-            acc[obj.key] = obj.value; // eslint-disable-line
+            acc[obj.key] = obj.value;
             return acc;
           }, {}));
         };
@@ -116,6 +115,10 @@ function createKeyValue(name: string) {
       });
     }
   };
+}
+
+function createLog() {
+
 }
 
 export const keyValue = createKeyValue(objectStoreKeyValueName);
