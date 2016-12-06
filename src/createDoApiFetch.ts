@@ -9,14 +9,12 @@ function logAndThrowError(error: string) {
 export default function createDoApiFetch(pushwooshUrl: string, logger: any) {
   return function doApiFetch(methodName: string, request: any) {
     logger.debug(`Performing ${methodName} call to Pushwoosh with arguments: ${JSON.stringify(request)}`);
-    const url = pushwooshUrl + methodName;
+    const url = `${pushwooshUrl}${methodName}`;
     const params = {request};
 
     return fetch(url, {
       method: 'post',
-      headers: {
-        'Content-Type': 'text/plain;charset=UTF-8'
-      },
+      headers: {'Content-Type': 'text/plain;charset=UTF-8'},
       body: JSON.stringify(params)
     }).then((response) => {
       if (!response.ok) {

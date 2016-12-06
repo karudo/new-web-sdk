@@ -1,5 +1,3 @@
-import Logger from './logger';
-
 interface IEevetTargetWithResult extends EventTarget {
   result: IDBDatabase;
 }
@@ -15,7 +13,7 @@ const objectStoreMessagesName = 'messages';
 let instance: IDBDatabase;
 
 function onversionchange(event: any) {
-  Logger.info('onversionchange', event);
+  console.info('onversionchange', event);
 }
 
 function getInstance(): Promise<IDBDatabase> {
@@ -45,9 +43,7 @@ function getInstance(): Promise<IDBDatabase> {
         database.onversionchange = onversionchange;
 
         if (!database.objectStoreNames.contains(objectStoreKeyValueName)) {
-          database.createObjectStore(objectStoreKeyValueName, {
-            keyPath: 'key'
-          });
+          database.createObjectStore(objectStoreKeyValueName, {keyPath: 'key'});
         }
 
         const autoIncrementId = {keyPath: 'id', autoIncrement: true};
@@ -66,7 +62,7 @@ function getInstance(): Promise<IDBDatabase> {
   });
 }
 
-function getInstanceWithPromise(executor: any) {
+function getInstanceWithPromise(executor: any): any {
   return getInstance().then(database => (
     new Promise((resolve, reject) => executor(database, resolve, reject))
   ));
@@ -91,8 +87,7 @@ function createKeyValue(name: string) {
       return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
         const request = (database.transaction(name).objectStore(name) as IDBObjectStoreEx).getAll();
         request.onsuccess = () => {
-          const {result} = request;
-          resolve(result.reduce((acc: any, obj: any) => {
+          resolve(request.result.reduce((acc: any, obj: any) => {
             acc[obj.key] = obj.value;
             return acc;
           }, {}));
@@ -117,8 +112,41 @@ function createKeyValue(name: string) {
   };
 }
 
-function createLog() {
+interface ILogStorage {
+  add(type: string, message: any): Promise<void>;
+  getAll(): Promise<any>
+}
 
+function createLog(name: string) {
+  return {
+    add(type: string, message: any) {
+      return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
+        const request = database.transaction([name], 'readwrite').objectStore(name).add({type, message: `${message}`, date: new Date});
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      });
+    },
+
+    getAll() {
+      return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
+        const request = (database.transaction(name).objectStore(name) as IDBObjectStoreEx).getAll();
+        request.onsuccess = () => {
+          resolve(request.result.reduce((acc: any, obj: any) => {
+            acc[obj.key] = obj.value;
+            return acc;
+          }, {}));
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      });
+    },
+  }
 }
 
 export const keyValue = createKeyValue(objectStoreKeyValueName);
+export const log: ILogStorage = createLog(objectStoreLogName);

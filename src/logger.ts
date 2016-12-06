@@ -1,3 +1,6 @@
+import {log as logStorage} from './storage';
+type TWriteType = 'error' | 'method';
+
 const levels: {[key: string]: number} = {
   error: 1,
   info: 2,
@@ -19,6 +22,7 @@ interface ILogger {
   error(...args: any[]): void;
   info(...args: any[]): void;
   debug(...args: any[]): void;
+  write(type: TWriteType, message: any): Promise<void>;
   [key: string]: any;
 }
 
@@ -28,6 +32,15 @@ const Logger: ILogger = {
       level = 'info';
     }
     numLevel = levels[level];
+  },
+  write(type: TWriteType, message: any) {
+    if (type === 'error') {
+      this.error(message);
+    }
+    else {
+      this.info(message);
+    }
+    return logStorage.add(type, message);
   }
 } as ILogger;
 
