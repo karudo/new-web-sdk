@@ -7,14 +7,14 @@ module.exports = {
   devtool: 'source-map',
   entry: {
     'web-notifications': './src/web-notifications.ts',
-    'service-worker': './src/service-worker.ts'
+    //'service-worker': './src/service-worker.ts',
   },
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'pushwoosh-[name].' + (production ? '' : 'uncompress.') + 'js'
   },
   resolve: {
-    extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
+    extensions: ['', '.ts'],
     modulesDirectories: ['src', 'node_modules']
   },
   module: {

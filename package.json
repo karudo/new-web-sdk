@@ -8,6 +8,7 @@
   "author": "Deonis Peretyagin",
   "license": "ISC",
   "devDependencies": {
+    "@types/service_worker_api": "^0.0.6",
     "babel-core": "^6.18.2",
     "babel-loader": "^6.2.8",
     "babel-plugin-version-inline": "^1.0.0",
@@ -18,7 +19,7 @@
     "tslint": "^4.0.2",
     "tslint-loader": "^3.3.0",
     "typescript": "^2.0.10",
-    "webpack": "^1.13.3"
+    "webpack": "^1.14.0"
   },
   "dependencies": {}
 }
