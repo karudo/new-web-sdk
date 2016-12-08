@@ -2,12 +2,11 @@ export function getGlobal() {
   return Function('return this')();
 }
 
-declare const safari: any;
 export function isSafariBrowser() {
   return typeof safari !== 'undefined' && navigator.userAgent.indexOf('Safari') > -1;
 }
 
-export function getBrowserType() {
+export function getBrowserType(): 10 | 11 | 12 {
   if (isSafariBrowser()) {
     return 10;
   }
@@ -42,7 +41,7 @@ export function getBrowserVersion() {
 
 export function createUUID(pushToken: string) {
   const hexDigits = '0123456789abcdef';
-  const s = [];
+  let s = '';
   for (let i = 0; i < 32; i++) {
     const l = pushToken.length - i - 1;
     let charCode = 0;
@@ -50,9 +49,9 @@ export function createUUID(pushToken: string) {
       charCode = pushToken.charCodeAt(l);
     }
 
-    s[i] = hexDigits.substr(charCode % hexDigits.length, 1);
+    s += hexDigits.substr(charCode % hexDigits.length, 1);
   }
-  return s.join('');
+  return s;
 }
 
 export function getPushToken(pushSubscription: PushSubscription) {
