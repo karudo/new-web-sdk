@@ -2,8 +2,13 @@ export function getGlobal() {
   return Function('return this')();
 }
 
+declare const __VERSION__: string;
+export function getVersion() {
+  return __VERSION__;
+}
+
 export function isSafariBrowser() {
-  return typeof safari !== 'undefined' && navigator.userAgent.indexOf('Safari') > -1;
+  return window.safari && navigator.userAgent.indexOf('Safari') > -1;
 }
 
 export function getBrowserType(): 10 | 11 | 12 {

@@ -1,19 +1,12 @@
 import {log as logStorage} from './storage';
-type TWriteType = 'error' | 'method';
+
+type TWriteType = 'error' | 'apirequest';
 
 const levels: {[key: string]: number} = {
   error: 1,
   info: 2,
   debug: 3
 };
-
-export function logError(error: any) {
-
-}
-
-export function logDebug(mess: any) {
-
-}
 
 let numLevel = 2;
 
@@ -53,5 +46,17 @@ Object.keys(levels).forEach((k: string) => {
     }
   };
 });
+
+export function logAndThrowError(error: string) {
+  const logText = new Error(error);
+  Logger.write('error', logText);
+  throw logText;
+}
+
+export function logAndRejectError(error: string, reject: (e: any) => void) {
+  const logText = new Error(error);
+  Logger.write('error', logText);
+  reject(logText);
+}
 
 export default Logger;

@@ -1,14 +1,7 @@
-import {logError} from './logger';
+import Logger, {logAndThrowError} from './logger';
 
-function logAndThrowError(error: string) {
-  const logText = new Error(error);
-  logError(logText);
-  throw logText;
-}
-
-export default function createDoApiFetch(pushwooshUrl: string, logger: any) {
+export default function createDoApiFetch(pushwooshUrl: string) {
   return function doApiFetch(methodName: string, request: any) {
-    logger.debug(`Performing ${methodName} call to Pushwoosh with arguments: ${JSON.stringify(request)}`);
     const url = `${pushwooshUrl}${methodName}`;
     const params = {request};
 
@@ -24,6 +17,7 @@ export default function createDoApiFetch(pushwooshUrl: string, logger: any) {
         if (json.status_code != 200) {
           logAndThrowError(`Error occurred during the ${methodName} call to Pushwoosh: ${json.status_message}`);
         }
+        Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(json.response)}`);
         return json.response;
       });
     });

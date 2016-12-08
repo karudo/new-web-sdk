@@ -1,27 +1,20 @@
-import {logError, logDebug} from './logger';
-
-function logAndRejectError(error: string, reject: (e: any) => void) {
-  const logText = new Error(error);
-  logError(logText);
-  reject(logText);
-}
+import Logger, {logAndRejectError} from './logger';
 
 export default function createDoApiXHR(pushwooshUrl: string) {
   return function doApiXHR(methodName: string, request: any) {
-    logDebug(`Performing ${methodName} call to Pushwoosh with arguments: ${JSON.stringify(request)}`);
     return new Promise((resolve, reject) => {
       try {
-        const xhr = new XMLHttpRequest();
-        const url = pushwooshUrl + methodName;
+        const url = `${pushwooshUrl}${methodName}`;
         const params = {request};
 
+        const xhr = new XMLHttpRequest();
         xhr.open('POST', url, true);
         xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
         xhr.onload = function xhrOnLoad() {
           if (xhr.status == 200) {
             const response = JSON.parse(xhr.responseText);
             if (response.status_code == 200) {
-              logDebug(`${methodName} call to Pushwoosh has been successful`);
+              Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(response.response)}`);
               resolve(response.response);
             }
             else {

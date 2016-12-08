@@ -3,6 +3,10 @@ var webpack = require('webpack');
 
 var production = process.env.NODE_ENV === 'production';
 
+var defines = {
+  __VERSION__: JSON.stringify(require("./package.json").version)
+};
+
 module.exports = {
   devtool: 'source-map',
   entry: {
@@ -26,14 +30,13 @@ module.exports = {
       }
     ],
     */
-    loaders: [
-      {
-        test: /\.ts$/, loaders: ['ts-loader']
-      }
-    ]
+    loaders: [{
+      test: /\.ts$/, loaders: ['ts-loader']
+    }]
   },
   plugins: [
     new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.DefinePlugin(defines),
     production && new webpack.optimize.UglifyJsPlugin({
       compress: {
         pure_getters: true,
