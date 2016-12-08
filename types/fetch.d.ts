@@ -29,7 +29,7 @@ interface Body {
   json(): Promise<JSON>;
   text(): Promise<string>;
 }
-
+/*
 interface Response extends Body {
   error(): Response;
   redirect(url: string, status?: number): Response;
@@ -41,7 +41,7 @@ interface Response extends Body {
   headers: Headers;
   clone(): Response;
 }
-
+*/
 interface Window {
   fetch(url: string, options?: FetchOptions): Promise<Response>;
 }

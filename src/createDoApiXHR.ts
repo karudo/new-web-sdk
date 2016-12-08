@@ -18,8 +18,8 @@ export default function createDoApiXHR(pushwooshUrl: string) {
         xhr.open('POST', url, true);
         xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
         xhr.onload = function xhrOnLoad() {
-          if (this.status == 200) {
-            const response = JSON.parse(this.responseText);
+          if (xhr.status == 200) {
+            const response = JSON.parse(xhr.responseText);
             if (response.status_code == 200) {
               logDebug(`${methodName} call to Pushwoosh has been successful`);
               resolve(response.response);
@@ -29,7 +29,7 @@ export default function createDoApiXHR(pushwooshUrl: string) {
             }
           }
           else {
-            logAndRejectError(`Error occurred, status code: ${this.status}`, reject);
+            logAndRejectError(`Error occurred, status code: ${xhr.status}`, reject);
           }
         };
         xhr.onerror = function xhrOnError(e) {
