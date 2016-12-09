@@ -20,8 +20,8 @@ export function getBrowserType(): 10 | 11 | 12 {
 
 export function getBrowserVersion() {
   const ua = navigator.userAgent;
-  let tem,
-    M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+  let M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+  let tem;
 
   if (/trident/i.test(M[1])) {
     tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
@@ -42,6 +42,21 @@ export function getBrowserVersion() {
   }
 
   return M.join(' ');
+}
+
+export function urlB64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }
 
 export function createUUID(pushToken: string) {

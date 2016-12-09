@@ -5,7 +5,7 @@
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
-    "server": "http-server ."
+    "server": "http-server . -a 127.0.0.1 -c-1"
   },
   "author": "Deonis Peretyagin",
   "license": "ISC",
