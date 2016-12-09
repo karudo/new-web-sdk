@@ -7,16 +7,16 @@ import {getGlobal, getBrowserVersion} from './functions';
 console.log(getBrowserVersion());
 
 async function qwe() {
-  const a = await Promise.resolve(1);
-  if (a > 5) {
-    throw new Error('sss');
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    console.log(registration);
   }
-  const b = await Promise.resolve(5);
-  return a + b;
+  catch (e) {
+    console.log(e);
+  }
 }
 
-qwe().catch(e => console.log(e));
-
+qwe();
 
 
 // navigator.serviceWorker.getRegistration().then(reg => reg.pushManager.getSubscription()).then(subs => console.log(subs.toJSON()))

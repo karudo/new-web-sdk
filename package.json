@@ -3,19 +3,22 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "server": "http-server ."
   },
   "author": "Deonis Peretyagin",
   "license": "ISC",
   "devDependencies": {
     "@types/service_worker_api": "^0.0.6",
-    "babel-core": "^6.18.2",
+    "babel-core": "^6.20.0",
     "babel-loader": "^6.2.9",
     "babel-plugin-version-inline": "^1.0.0",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-stage-0": "^6.16.0",
+    "http-server": "^0.9.0",
     "rimraf": "^2.5.4",
-    "ts-loader": "^1.3.0",
+    "ts-loader": "^1.3.1",
     "tslint": "^4.0.2",
     "tslint-loader": "^3.3.0",
     "typescript": "^2.1.4",
