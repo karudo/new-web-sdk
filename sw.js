@@ -10,4 +10,6 @@ self.addEventListener('activate', function(event) {
 });
 self.addEventListener('push', (event) => {
   console.log(event);
+  event.waitUntil(self.registration.showNotification('title', {body: 'hello!'}));
 });
+console.log(self);

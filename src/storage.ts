@@ -10,30 +10,20 @@ const objectStoreKeyValueName = 'keyValue';
 const objectStoreLogName = 'log';
 const objectStoreMessagesName = 'messages';
 
-let instance: IDBDatabase;
 
 function onversionchange(event: any) {
   console.info('onversionchange', event);
 }
 
+let databasePromise: Promise<IDBDatabase>;
 function getInstance(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    if (instance) {
-      resolve(instance);
-    }
-    else {
+  if (!databasePromise) {
+    databasePromise = new Promise<IDBDatabase>((resolve, reject) => {
       const request: IDBOpenDBRequest = indexedDB.open('PUSHWOOSH_SDK_STORE', 3);
       request.onsuccess = (event) => {
         const database: IDBDatabase = (event.target as IEevetTargetWithResult).result;
         database.onversionchange = onversionchange;
-        if (instance) {
-          database.close();
-          resolve(instance);
-        }
-        else {
-          instance = database;
-          resolve(database);
-        }
+        resolve(database);
       };
 
       request.onerror = () => reject(request.error);
@@ -58,8 +48,9 @@ function getInstance(): Promise<IDBDatabase> {
           messagesStore.createIndex('date', 'date', uniqueFalse);
         }
       };
-    }
-  });
+    });
+  }
+  return databasePromise;
 }
 
 function getInstanceWithPromise(executor: any): any {
