@@ -4,14 +4,25 @@ type PushwooshApiResponce = {
   response?: any
 }
 
-type TNotificationPermission = 'denied' | 'granted' | 'default';
+type TPWPermission = 'denied' | 'granted' | 'prompt';
 
-interface IPushDriver {
-  getPermission(): TNotificationPermission;
-}
+type TPWAPIParams = {
+  applicationCode: string;
+  hwid: string;
+  pushToken: string;
+  publicKey?: string;
+  authToken?: string;
+};
+
 
 type TSubsOptions = {userVisibleOnly?: boolean, applicationServerKey?: Uint8Array};
 
 interface PushManager {
-  permissionState(options: TSubsOptions): Promise<'prompt' | 'denied' | 'granted'>
+  permissionState(options: TSubsOptions): Promise<TPWPermission>
+}
+
+interface IPWDriver {
+  checkPermission(): Promise<TPWPermission>;
+  trySubscribe(): Promise<undefined>;
+  getAPIParams(): Promise<TPWAPIParams>;
 }

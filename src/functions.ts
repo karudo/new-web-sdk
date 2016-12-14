@@ -59,6 +59,21 @@ export function urlB64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+export function getDeviceName() {
+  const userAgent = navigator.userAgent;
+  if (userAgent.match(/Android/i)
+    || userAgent.match(/webOS/i)
+    || userAgent.match(/iPhone/i)
+    || userAgent.match(/iPad/i)
+    || userAgent.match(/iPod/i)
+    || userAgent.match(/BlackBerry/i)
+    || userAgent.match(/Windows Phone/i)
+  ) {
+    return 'Phone';
+  }
+  return 'PC';
+}
+
 export function createUUID(pushToken: string) {
   const hexDigits = '0123456789abcdef';
   let s = '';
@@ -72,6 +87,10 @@ export function createUUID(pushToken: string) {
     s += hexDigits.substr(charCode % hexDigits.length, 1);
   }
   return s;
+}
+
+export function generateHwid(applicationCode: string, pushToken: string) {
+  return `${applicationCode}_${createUUID(pushToken)}`;
 }
 
 export function getPushToken(pushSubscription: PushSubscription) {
