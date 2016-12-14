@@ -1,5 +1,8 @@
 import {getGlobal, getBrowserVersion, urlB64ToUint8Array} from './functions';
 
+import Pushwoosh from './Pushwoosh';
+
+var pw = new Pushwoosh;
 
 
 const applicationServerPublicKey = 'BCW6JPG-T7Jx0bYKMhAbL6j3DL3VTTib7dwvBjQ' +

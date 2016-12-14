@@ -10,7 +10,7 @@
   "author": "Deonis Peretyagin",
   "license": "ISC",
   "devDependencies": {
-    "@types/service_worker_api": "^0.0.6",
+    "@types/service_worker_api": "^0.0.7",
     "babel-core": "^6.20.0",
     "babel-loader": "^6.2.9",
     "babel-plugin-version-inline": "^1.0.0",
