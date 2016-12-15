@@ -1,6 +1,6 @@
-type ListenerFn = (...args: Array<any>) => void;
+type ListenerFn = (...args: Array<any>) => void | Promise<any>;
 
-class EventsEmitter {
+class EventEmitter {
   private _events: {
     [key: string]: ListenerFn[]
   };
@@ -9,7 +9,7 @@ class EventsEmitter {
   }
 
   emit(evt: string, param?: any) {
-    const events = this._events[evt];
+    const events = this._events[evt] && this._events[evt].slice();
     if (events && events.length) {
       for (let i = 0; i < events.length; i++) {
         events[i](param);
@@ -26,9 +26,13 @@ class EventsEmitter {
   }
 
   once(evt: string, fn: ListenerFn) {
+    let used = false;
     const oncefun = (param: any) => {
-      this.removeListener(evt, oncefun);
-      fn(param);
+      if (!used) {
+        used = true;
+        this.removeListener(evt, oncefun);
+        return fn(param);
+      }
     };
     return this.on(evt, oncefun);
   }
@@ -40,9 +44,12 @@ class EventsEmitter {
       if (idx > -1) {
         events.splice(idx, 1);
       }
+      if (events.length < 1) {
+        delete this._events[evt];
+      }
     }
   }
 }
 
 
-export default EventsEmitter;
+export default EventEmitter;

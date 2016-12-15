@@ -25,6 +25,7 @@ class Pushwoosh {
 
   init(params: TInitParams) {
     this._ee.emit('init-success');
+    this._ee.emit('init-success');
   }
 
   _runCmd(func: any) {
