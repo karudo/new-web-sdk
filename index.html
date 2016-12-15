@@ -1,7 +1,18 @@
 <html>
 <head>
   <script type="text/javascript">
-    document.write('<script type="text/javascript" src="./dist/pushwoosh-web-notifications.uncompress.js?rnd='+Math.random()+'"><'+'/script>')
+    var Pushwoosh = Pushwoosh || [];
+    document.write('<script type="text/javascript" src="./dist/pushwoosh-web-notifications.uncompress.js?rnd='+Math.random()+'" async><'+'/script>');
+    Pushwoosh.push(["init", {
+      applicationCode: '94B02-09D75',
+      safariWebsitePushID: 'web.com.karudo.test',
+      logLevel: 'debug',
+      defaultNotificationTitle: 'Pushwoosh',
+      defaultNotificationImage: 'https://cp.pushwoosh.com/img/logo-medium.png'
+    }]);
+    Pushwoosh.push(function() {
+        console.log(2);
+    });
   </script>
 </head>
 <body>

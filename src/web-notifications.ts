@@ -1,3 +1,32 @@
+import PushwooshSingleton from './Pushwoosh';
+import {getGlobal} from './functions';
+
+function main() {
+  const global = getGlobal();
+
+  let {Pushwoosh} = global;
+  let predefinedCommands;
+
+  if (Pushwoosh) {
+    predefinedCommands = Pushwoosh;
+  }
+
+  Pushwoosh = new PushwooshSingleton();
+  if (Array.isArray(predefinedCommands)) {
+    predefinedCommands.forEach(c => Pushwoosh.push(c));
+  }
+
+  global.Pushwoosh = Pushwoosh;
+}
+
+if (document.readyState === 'complete') {
+  main();
+}
+else {
+  window.addEventListener('load', main);
+}
+
+/*
 import {getGlobal, getBrowserVersion, urlB64ToUint8Array} from './functions';
 
 import Pushwoosh from './Pushwoosh';
@@ -42,5 +71,5 @@ async function qwe() {
 
 qwe();
 
-
+*/
 // navigator.serviceWorker.getRegistration().then(reg => reg.pushManager.getSubscription()).then(subs => console.log(subs.toJSON()))

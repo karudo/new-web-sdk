@@ -11,43 +11,34 @@ type TInitParams = {
 class Pushwoosh {
   private _ee: EventEmitter = new EventEmitter();
   private _commands: any[] = [];
-  private _successStart: Promise<any>;
+  private _successInit: Promise<any>;
   private api: API;
 
-  init(params: TInitParams) {
+  public readonly driver: IPWDriver;
 
+  constructor() {
+    this._successInit = new Promise((resolve) => {
+      this._ee.once('init-success', resolve);
+    });
+    this._successInit.then(() => this._commands.forEach(cmd => this._runCmd(cmd)));
+  }
+
+  init(params: TInitParams) {
+    this._ee.emit('init-success');
   }
 
   _runCmd(func: any) {
-    return this._successStart.then(func);
-  }
-
-  _cmdInit(params: TInitParams) {
-    if (document.readyState === 'complete') {
-      this.init(params);
-    }
-    else {
-      window.addEventListener('load', () => this.init(params));
-    }
-  }
-
-  _runOrPush(clb: any) {
-    if (this._successStart) {
-      this._runCmd(clb);
-    }
-    else {
-      this._commands.push(clb);
-    }
+    return this._successInit.then(func);
   }
 
   push(cmd: any) {
     if (typeof cmd === 'function') {
-      this._runOrPush(() => cmd());
+      this._runCmd(() => cmd());
     }
     else if (Array.isArray(cmd)) {
       switch (cmd[0]) {
         case 'init':
-          this._cmdInit(cmd[1]);
+          this.init(cmd[1]);
           break;
         default:
           throw new Error('unknown command');

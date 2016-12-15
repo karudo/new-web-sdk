@@ -8,7 +8,7 @@ class EventsEmitter {
     this._events = {};
   }
 
-  emit(evt: string, param: any) {
+  emit(evt: string, param?: any) {
     const events = this._events[evt];
     if (events && events.length) {
       for (let i = 0; i < events.length; i++) {
