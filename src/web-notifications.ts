@@ -68,7 +68,7 @@ async function qwe() {
     console.log(e);
   }
 }
-
+ navigator.serviceWorker.getRegistration().then(reg => reg.pushManager.getSubscription()).then(subs => console.log(subs.toJSON()))
 qwe();
 
 */

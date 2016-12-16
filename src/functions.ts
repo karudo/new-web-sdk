@@ -11,6 +11,10 @@ export function isSafariBrowser() {
   return window.safari && navigator.userAgent.indexOf('Safari') > -1;
 }
 
+export function canUseServiceWorkers() {
+  return navigator.serviceWorker && ('PushManager' in window);
+}
+
 export function getBrowserType(): 10 | 11 | 12 {
   if (isSafariBrowser()) {
     return 10;

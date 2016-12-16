@@ -8,7 +8,8 @@
       safariWebsitePushID: 'web.com.karudo.test',
       logLevel: 'debug',
       defaultNotificationTitle: 'Pushwoosh',
-      defaultNotificationImage: 'https://cp.pushwoosh.com/img/logo-medium.png'
+      defaultNotificationImage: 'https://cp.pushwoosh.com/img/logo-medium.png',
+      autoSubscribe: true
     }]);
     Pushwoosh.push(function() {
       console.log(1, Pushwoosh);
