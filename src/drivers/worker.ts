@@ -28,8 +28,16 @@ class WorkerDriver implements IPWDriver {
     return Notification.permission === 'default' ? 'prompt' : Notification.permission;
   }
 
-  async subscribe() {
-    console.log(this);
+  async isSubscribed() {
+    let serviceWorkerRegistration = await navigator.serviceWorker.getRegistration();
+    if (!serviceWorkerRegistration) {
+      return false;
+    }
+    let subscription = await serviceWorkerRegistration.pushManager.getSubscription();
+    return !!subscription;
+  }
+
+  async askSubscribe() {
     let serviceWorkerRegistration = await navigator.serviceWorker.ready;
     let subscription = await serviceWorkerRegistration.pushManager.getSubscription();
     if (!subscription) {

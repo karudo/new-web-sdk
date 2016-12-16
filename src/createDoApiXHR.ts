@@ -12,13 +12,17 @@ export default function createDoApiXHR(pushwooshUrl: string) {
         xhr.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
         xhr.onload = function xhrOnLoad() {
           if (xhr.status == 200) {
-            const response = JSON.parse(xhr.responseText);
-            if (response.status_code == 200) {
-              Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(response.response)}`);
-              resolve(response.response);
-            }
-            else {
-              logAndRejectError(`Error occurred during the ${methodName} call to Pushwoosh: ${response.status_message}`, reject);
+            try {
+              const response = JSON.parse(xhr.responseText);
+              if (response.status_code == 200) {
+                Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(response.response)}`);
+                resolve(response.response);
+              }
+              else {
+                logAndRejectError(`Error occurred during the ${methodName} call to Pushwoosh: ${response.status_message}`, reject);
+              }
+            } catch (e) {
+              logAndRejectError(`Error parse responce: ${e}`, reject);
             }
           }
           else {

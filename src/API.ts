@@ -12,26 +12,27 @@ import {
 type TAPIRegisterTags = {
   timezone?: number;
   language?: string;
-  device_model?: string;
-  device_name?: string;
-  device_type?: number;
 }
+
+type TDoPushwooshMethod = (type: string, params: any) => Promise<any>
 
 export default class PushwooshAPI {
   private timezone: number = -(new Date).getTimezoneOffset() * 60;
 
-  constructor(private params: TPWAPIParams, private tags?: TAPIRegisterTags) {}
-
-  doPushwooshApiMethod(a: any, b: any): Promise<any> {
-    return Promise.resolve();
-  }
+  constructor(private doPushwooshApiMethod: TDoPushwooshMethod, private params: TPWAPIParams) {}
 
   callAPI(methodName: string, methodParams?: any) {
     const {params} = this;
-    return this.doPushwooshApiMethod(methodName, {
-      ...methodParams,
+    const mustBeParams: any = {
       application: params.applicationCode,
       hwid: params.hwid
+    };
+    if (params.userId) {
+      mustBeParams.userId = params.userId;
+    }
+    return this.doPushwooshApiMethod(methodName, {
+      ...methodParams,
+      ...mustBeParams
     });
   }
 
@@ -39,10 +40,10 @@ export default class PushwooshAPI {
     const {params} = this;
     return this.callAPI('registerDevice', {
       timezone: this.timezone,
+      language: params.language,
       device_model: getBrowserVersion(),
       device_name: getDeviceName(),
       device_type: getBrowserType(),
-      ...this.tags,
       push_token: params.pushToken,
       public_key: params.publicKey,
       auth_token: params.authToken,
@@ -51,6 +52,14 @@ export default class PushwooshAPI {
 
   unregisterDevice() {
     return this.callAPI('unregisterDevice');
+  }
+
+  registerUser() {
+    const {params} = this;
+    return this.callAPI('registerUser', {
+      timezone: this.timezone,
+      device_type: getBrowserType(),
+    });
   }
 
   applicationOpen() {

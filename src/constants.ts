@@ -1,20 +1,10 @@
-export const defaultWorkerUrl = '/pushwoosh-service-worker-light.js';
-export const defaultWorkerSecondUrl = '/pushwoosh-service-worker-dark.js';
+export const defaultServiceWorkerUrl = '/pushwoosh-service-worker.js';
 
 export const defaultNotificationTitle = 'Pushwoosh notification';
 export const defaultNotificationImage = 'https://cp.pushwoosh.com/img/logo-medium.png';
 export const defaultNotificationUrl = '/';
 
-export const keyTagsWasSetted = 'pushwooshDefaultTagsWasSetted';
-export const keyWasRegistered = 'pushwooshWasRegistered';
-export const keyApplicationCode = 'pushwooshApplicationCode';
-
-export const keyDefaultNotificationTitle = 'pushwooshDefaultNotificationTitle';
-export const keyDefaultNotificationImage = 'pushwooshDefaultNotificationImage';
-export const keyDefaultNotificationUrl = 'pushwooshDefaultNotificationUrl';
-
-export const keyWorkerSDKVersion = 'pushwooshWorkerSDKVersion';
-
-export const keyLanguage = 'pushwooshLanguage';
-
-export const keyLastSentAppOpen = 'pushwooshLastSentAppOpen';
+export const keyApiParams = 'API_PARAMS';
+export const keyInitParams = 'INIT_PARAMS';
+export const keySDKVerion = 'SDK_VERSION';
+export const keyLastSentAppOpen = 'LAST_SENT_APP_OPEN';

@@ -9,7 +9,9 @@
       logLevel: 'debug',
       defaultNotificationTitle: 'Pushwoosh',
       defaultNotificationImage: 'https://cp.pushwoosh.com/img/logo-medium.png',
-      autoSubscribe: true
+      autoSubscribe: true,
+      userId: 'karudo',
+      tags: {pwcom: 1}
     }]);
     Pushwoosh.push(function() {
       console.log(1, Pushwoosh);

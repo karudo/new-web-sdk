@@ -15,6 +15,8 @@ interface IPWDriverAPIParams {
 
 interface TPWAPIParams extends IPWDriverAPIParams {
   applicationCode: string;
+  language: string;
+  userId?: string;
 }
 
 interface PushManager {
@@ -23,6 +25,7 @@ interface PushManager {
 
 interface IPWDriver {
   getPermission(): Promise<TPWPermission>;
-  subscribe(): Promise<any>;
+  isSubscribed(): Promise<boolean>;
+  askSubscribe(): Promise<any>;
   getAPIParams(applicationCode: string): Promise<IPWDriverAPIParams>;
 }
