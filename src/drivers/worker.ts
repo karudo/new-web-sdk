@@ -1,7 +1,6 @@
-import {getPushToken, generateHwid, getPublicKey, getAuthToken, urlB64ToUint8Array} from '../functions'
+import {getPushToken, generateHwid, getPublicKey, getAuthToken, urlB64ToUint8Array, getBrowserType, getVersion} from '../functions'
 
-const applicationServerPublicKey = 'BCW6JPG-T7Jx0bYKMhAbL6j3DL3VTTib7dwvBjQ' +
-  'C_496a12auzzKFnjgFjCsys_YtWkeMLhogfSlyM0CaIktx7o';
+const applicationServerPublicKey = 'BCW6JPG-T7Jx0bYKMhAbL6j3DL3VTTib7dwvBjQC_496a12auzzKFnjgFjCsys_YtWkeMLhogfSlyM0CaIktx7o';
 const applicationServerKey = urlB64ToUint8Array(applicationServerPublicKey);
 
 declare const Notification: {
@@ -9,7 +8,8 @@ declare const Notification: {
 };
 
 type TWorkerDriverParams = {
-  serviceWorkerUrl: string
+  applicationCode: string,
+  serviceWorkerUrl: string,
 }
 
 class WorkerDriver implements IPWDriver {
@@ -20,7 +20,7 @@ class WorkerDriver implements IPWDriver {
   private async initWorker() {
     let serviceWorkerRegistration = await navigator.serviceWorker.getRegistration();
     if (!serviceWorkerRegistration || serviceWorkerRegistration.installing == null) {
-      await navigator.serviceWorker.register(this.params.serviceWorkerUrl);
+      await navigator.serviceWorker.register(`${this.params.serviceWorkerUrl}?version=${getVersion()}`);
     }
   }
 
@@ -41,12 +41,16 @@ class WorkerDriver implements IPWDriver {
     let serviceWorkerRegistration = await navigator.serviceWorker.ready;
     let subscription = await serviceWorkerRegistration.pushManager.getSubscription();
     if (!subscription) {
-      subscription = await serviceWorkerRegistration.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: applicationServerKey})
+      const options: any = {userVisibleOnly: true};
+      if (getBrowserType() == 11) {
+        options.applicationServerKey = applicationServerKey;
+      }
+      subscription = await serviceWorkerRegistration.pushManager.subscribe(options)
     }
     return subscription;
   }
 
-  async getAPIParams(applicationCode: string) {
+  async getAPIParams() {
     let serviceWorkerRegistration = await navigator.serviceWorker.getRegistration();
     if (!serviceWorkerRegistration) {
       throw new Error('No service worker registration');
@@ -57,7 +61,7 @@ class WorkerDriver implements IPWDriver {
 
     const pushToken = getPushToken(subscription);
     return {
-      hwid: generateHwid(applicationCode, pushToken),
+      hwid: generateHwid(this.params.applicationCode, pushToken),
       pushToken: pushToken,
       publicKey: getPublicKey(subscription),
       authToken: getAuthToken(subscription),

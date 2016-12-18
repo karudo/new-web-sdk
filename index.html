@@ -13,12 +13,12 @@
       userId: 'karudo',
       tags: {pwcom: 1}
     }]);
-    Pushwoosh.push(function() {
-      console.log(1, Pushwoosh);
-    });
-    Pushwoosh.push(function() {
-      console.log(2, Pushwoosh);
-    });
+    Pushwoosh.push(['onLoad', function() {
+      console.log('onLoad');
+    }]);
+    Pushwoosh.push(['onReady', function() {
+      console.log('onReady');
+    }]);
   </script>
 </head>
 <body>

@@ -6,14 +6,16 @@ import {
   getBrowserVersion,
   canUseServiceWorkers,
   getPushwooshUrl,
-  shallowEqual, getVersion
+  shallowEqual,
+  getVersion
 } from './functions';
 import {
   defaultServiceWorkerUrl,
   keyApiParams,
   keyInitParams,
   keySDKVerion,
-  keyLastSentAppOpen
+  keyLastSentAppOpen,
+  periodSendAppOpen
 } from './constants';
 import Logger from './logger'
 import WorkerDriver from './drivers/worker';
@@ -26,30 +28,34 @@ interface IInitParams  {
   serviceWorkerUrl?: string;
   autoSubscribe?: boolean;
   pushwooshUrl?: string;
-  language?: string;
   logLevel?: string;
   userId?: string;
-  tags?: {Language?: string, [key: string]: any}
+  tags?: {[key: string]: any};
 }
 
 interface IInitParamsWithDefauls extends IInitParams {
-  language: string;
   autoSubscribe: boolean;
   serviceWorkerUrl: string;
   pushwooshUrl: string;
+  tags: {Language: string, [key: string]: any}
 }
+
+const eventOnLoad = 'event-onLoad';
+const eventOnReady = 'event-onReady';
 
 class Pushwoosh {
   private params: IInitParamsWithDefauls;
   private _initParams: IInitParams;
   private _ee: EventEmitter = new EventEmitter();
   private _onLoadPromise: Promise<any>;
-  private api: API;
+  private _onReadyPromise: Promise<any>;
 
+  public api: API;
   public driver: IPWDriver;
 
   constructor() {
-    this._onLoadPromise = new Promise(resolve => this._ee.once('event-onload', resolve));
+    this._onLoadPromise = new Promise(resolve => this._ee.once(eventOnLoad, resolve));
+    this._onReadyPromise = new Promise(resolve => this._ee.once(eventOnReady, resolve));
   }
 
   init(params: IInitParams) {
@@ -65,17 +71,23 @@ class Pushwoosh {
 
     this.params = {
       autoSubscribe: false,
-      language: navigator.language || 'en',
       serviceWorkerUrl: defaultServiceWorkerUrl,
       pushwooshUrl: getPushwooshUrl(applicationCode),
-      ...params
+      ...params,
+      tags: {
+        Language: navigator.language || 'en',
+        ...params.tags
+      }
     };
 
     if (canUseServiceWorkers()) {
-      this.driver = new WorkerDriver({serviceWorkerUrl: this.params.serviceWorkerUrl as string});
+      this.driver = new WorkerDriver({
+        applicationCode: applicationCode,
+        serviceWorkerUrl: this.params.serviceWorkerUrl
+      });
     }
 
-    this._ee.emit('event-onload');
+    this._ee.emit(eventOnLoad);
 
     if (this.params.autoSubscribe) {
       this.driver.getPermission().then(permission => {
@@ -90,13 +102,20 @@ class Pushwoosh {
   }
 
   push(cmd: any) {
-    if (typeof cmd === 'function') {
-      this._runCmd(() => cmd());
+    /*if (typeof cmd === 'function') {
+      this._runOnLoad(() => cmd());
     }
-    else if (Array.isArray(cmd)) {
+    else */
+    if (Array.isArray(cmd)) {
       switch (cmd[0]) {
         case 'init':
           this.init(cmd[1]);
+          break;
+        case 'onLoad':
+          this._onLoadPromise.then(cmd[1]);
+          break;
+        case 'onReady':
+          this._onReadyPromise.then(cmd[1]);
           break;
         default:
           throw new Error('unknown command');
@@ -113,18 +132,22 @@ class Pushwoosh {
       await this.driver.askSubscribe();
     }
 
-    const driverApiParams = await this.driver.getAPIParams(this.params.applicationCode);
+    const driverApiParams = await this.driver.getAPIParams();
     const {params} = this;
     let apiParams: TPWAPIParams = {
       ...driverApiParams,
       applicationCode: params.applicationCode,
-      language: params.language,
+      language: params.tags.Language,
     };
     if (params.userId) {
       apiParams.userId = params.userId
     }
     const func = createDoApiXHR(params.pushwooshUrl);
     this.api = new API(func, apiParams);
+    this._ee.emit(eventOnReady);
+    if (this.driver.onApiReady) {
+      this.driver.onApiReady(this.api);
+    }
   }
 
   async register() {
@@ -134,7 +157,6 @@ class Pushwoosh {
     await this.api.registerDevice();
     await Promise.all([
       this.api.setTags({
-        'Language': this.params.language,
           ...this.params.tags,
         'Device Model': getBrowserVersion(),
       }),
@@ -151,15 +173,12 @@ class Pushwoosh {
       [keyInitParams]: savedInitParams
     } = await keyValue.getAll();
 
-    const apiParams = await this.driver.getAPIParams(this.params.applicationCode);
-    let {tags: savedTags, ...savedInitParamsWOTags} = savedInitParams || {} as TPWAPIParams;
-    let {tags, ...initParamsWOTags} = this.params;
+    const apiParams = await this.driver.getAPIParams();
 
     const shouldRegister = !(
       getVersion() === savedSDKVersion &&
       shallowEqual(savedApiParams, apiParams) &&
-      shallowEqual(savedInitParamsWOTags, initParamsWOTags) &&
-      JSON.stringify(savedTags) === JSON.stringify(tags)
+      JSON.stringify(savedInitParams) === JSON.stringify(this.params)
     );
 
     if (shouldRegister) {
@@ -177,7 +196,7 @@ class Pushwoosh {
       lastSentTime = 0;
     }
     const curTime = Date.now();
-    if ((curTime - lastSentTime) > 3600000) {
+    if ((curTime - lastSentTime) > periodSendAppOpen) {
       await Promise.all([
         keyValue.set(keyLastSentAppOpen, curTime),
         this.api.applicationOpen()
@@ -185,7 +204,7 @@ class Pushwoosh {
     }
   }
 
-  private _runCmd(func: any) {
+  private _runOnLoad(func: any) {
     return this._onLoadPromise.then(func);
   }
 }

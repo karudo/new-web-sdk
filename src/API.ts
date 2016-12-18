@@ -1,18 +1,9 @@
 import {
   getBrowserVersion,
   getDeviceName,
-  getBrowserType,
-  getPushToken,
-  generateHwid,
-  getPublicKey,
-  getAuthToken
+  getBrowserType
 } from './functions';
 
-
-type TAPIRegisterTags = {
-  timezone?: number;
-  language?: string;
-}
 
 type TDoPushwooshMethod = (type: string, params: any) => Promise<any>
 
@@ -39,14 +30,14 @@ export default class PushwooshAPI {
   registerDevice() {
     const {params} = this;
     return this.callAPI('registerDevice', {
-      timezone: this.timezone,
-      language: params.language,
-      device_model: getBrowserVersion(),
-      device_name: getDeviceName(),
-      device_type: getBrowserType(),
       push_token: params.pushToken,
       public_key: params.publicKey,
       auth_token: params.authToken,
+      language: params.language,
+      timezone: this.timezone,
+      device_model: getBrowserVersion(),
+      device_name: getDeviceName(),
+      device_type: getBrowserType(),
     });
   }
 
@@ -55,7 +46,6 @@ export default class PushwooshAPI {
   }
 
   registerUser() {
-    const {params} = this;
     return this.callAPI('registerUser', {
       timezone: this.timezone,
       device_type: getBrowserType(),

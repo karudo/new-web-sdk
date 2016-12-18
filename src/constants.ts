@@ -1,5 +1,7 @@
 export const defaultServiceWorkerUrl = '/pushwoosh-service-worker.js';
 
+export const periodSendAppOpen = 3600000;
+
 export const defaultNotificationTitle = 'Pushwoosh notification';
 export const defaultNotificationImage = 'https://cp.pushwoosh.com/img/logo-medium.png';
 export const defaultNotificationUrl = '/';

@@ -27,5 +27,6 @@ interface IPWDriver {
   getPermission(): Promise<TPWPermission>;
   isSubscribed(): Promise<boolean>;
   askSubscribe(): Promise<any>;
-  getAPIParams(applicationCode: string): Promise<IPWDriverAPIParams>;
+  getAPIParams(): Promise<IPWDriverAPIParams>;
+  onApiReady?(api: any): void;
 }
