@@ -9,4 +9,5 @@ export const defaultNotificationUrl = '/';
 export const keyApiParams = 'API_PARAMS';
 export const keyInitParams = 'INIT_PARAMS';
 export const keySDKVerion = 'SDK_VERSION';
+export const keyWorkerVerion = 'WORKER_VERSION';
 export const keyLastSentAppOpen = 'LAST_SENT_APP_OPEN';

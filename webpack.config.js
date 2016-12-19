@@ -11,7 +11,7 @@ module.exports = {
   devtool: 'source-map',
   entry: {
     'web-notifications': './src/web-notifications.ts',
-    //'service-worker': './src/service-worker.ts',
+    'service-worker': './src/service-worker.ts',
   },
   output: {
     path: path.join(__dirname, 'dist'),

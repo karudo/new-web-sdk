@@ -30,3 +30,19 @@ interface IPWDriver {
   getAPIParams(): Promise<IPWDriverAPIParams>;
   onApiReady?(api: any): void;
 }
+
+interface ServiceWorkerRegistration {
+  showNotification(a: any, b: any): Promise<any>;
+}
+
+interface Window {
+  Pushwoosh: any[];
+}
+interface PushMessageData {
+  json(): any;
+  text(): string;
+}
+
+interface PushEvent extends ExtendableEvent {
+  data: PushMessageData
+}

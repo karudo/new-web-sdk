@@ -103,41 +103,51 @@ function createKeyValue(name: string) {
   };
 }
 
-interface ILogStorage {
-  add(type: string, message: any): Promise<void>;
-  getAll(): Promise<any>
+
+abstract class LogBase {
+  protected name: string;
+  _add(obj: any) {
+    return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
+      const request = database.transaction([this.name], 'readwrite').objectStore(this.name).add(obj);
+      request.onsuccess = () => {
+        resolve();
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
+
+  getAll() {
+    return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
+      const request = (database.transaction(this.name).objectStore(this.name) as IDBObjectStoreEx).getAll();
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
 }
 
-function createLog(name: string) {
-  return {
-    add(type: string, message: any) {
-      return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
-        const request = database.transaction([name], 'readwrite').objectStore(name).add({type, message: `${message}`, date: new Date});
-        request.onsuccess = () => {
-          resolve();
-        };
-        request.onerror = () => {
-          reject(request.error);
-        };
-      });
-    },
+class LogLog extends LogBase {
+  protected name = objectStoreLogName;
+  add(type: string, message: any) {
+    return this._add({type, message: `${message}`, date: new Date});
+  }
+}
 
-    getAll() {
-      return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
-        const request = (database.transaction(name).objectStore(name) as IDBObjectStoreEx).getAll();
-        request.onsuccess = () => {
-          resolve(request.result.reduce((acc: any, obj: any) => {
-            acc[obj.key] = obj.value;
-            return acc;
-          }, {}));
-        };
-        request.onerror = () => {
-          reject(request.error);
-        };
-      });
-    },
+class LogMessage extends LogBase {
+  protected name = objectStoreMessagesName;
+  add(log: any) {
+    return this._add({
+      ...log,
+      date: new Date
+    });
   }
 }
 
 export const keyValue = createKeyValue(objectStoreKeyValueName);
-export const log: ILogStorage = createLog(objectStoreLogName);
+export const log = new LogLog();
+export const message = new LogMessage();

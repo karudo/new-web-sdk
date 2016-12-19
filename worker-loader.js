@@ -1,3 +1,3 @@
 console.log('worker loader starts');
-importScripts('./worker1.js');
+importScripts('./dist/pushwoosh-service-worker.uncompress.js');
 console.log('worker loader finishes');
