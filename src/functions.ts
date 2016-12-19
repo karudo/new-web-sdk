@@ -4,7 +4,7 @@ export function getGlobal() {
 
 declare const __VERSION__: string;
 export function getVersion() {
-  return __VERSION__;
+  return __VERSION__ + '3';
 }
 
 export function isSafariBrowser() {
@@ -128,33 +128,4 @@ export function getPushwooshUrl(applicationCode: string) {
     subDomain = `${applicationCode}.api`;
   }
   return `https://${subDomain}.pushwoosh.com/json/1.3/`;
-}
-
-const hasOwn = Object.prototype.hasOwnProperty;
-export function shallowEqual(a: any, b: any): boolean {
-  if (a === b) {
-    return true;
-  }
-
-  if (!a || !b) {
-    return false;
-  }
-
-  let countA = 0;
-  let countB = 0;
-
-  for (let key in a) {
-    if (hasOwn.call(a, key) && a[key] !== b[key]) {
-      return false;
-    }
-    countA++
-  }
-
-  for (let key in b) {
-    if (hasOwn.call(b, key)) {
-      countB++
-    }
-  }
-
-  return countA === countB
 }

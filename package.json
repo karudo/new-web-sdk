@@ -1,6 +1,6 @@
 {
   "name": "new-web-sdk",
-  "version": "1.0.0",
+  "version": "3.0.0-alpha",
   "description": "",
   "scripts": {
     "build": "webpack",

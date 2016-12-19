@@ -1,7 +1,12 @@
-import {getPushToken, generateHwid, getPublicKey, getAuthToken, urlB64ToUint8Array, getBrowserType, getVersion} from '../functions'
-
-const applicationServerPublicKey = 'BCW6JPG-T7Jx0bYKMhAbL6j3DL3VTTib7dwvBjQC_496a12auzzKFnjgFjCsys_YtWkeMLhogfSlyM0CaIktx7o';
-const applicationServerKey = urlB64ToUint8Array(applicationServerPublicKey);
+import {
+  getPushToken,
+  generateHwid,
+  getPublicKey,
+  getAuthToken,
+  urlB64ToUint8Array,
+  getBrowserType,
+  getVersion
+} from '../functions'
 
 declare const Notification: {
   permission: 'granted' | 'denied' | 'default'
@@ -10,6 +15,7 @@ declare const Notification: {
 type TWorkerDriverParams = {
   applicationCode: string,
   serviceWorkerUrl: string,
+  applicationServerPublicKey?: string,
 }
 
 class WorkerDriver implements IPWDriver {
@@ -42,8 +48,8 @@ class WorkerDriver implements IPWDriver {
     let subscription = await serviceWorkerRegistration.pushManager.getSubscription();
     if (!subscription) {
       const options: any = {userVisibleOnly: true};
-      if (getBrowserType() == 11) {
-        options.applicationServerKey = applicationServerKey;
+      if (getBrowserType() == 11 && this.params.applicationServerPublicKey) {
+        options.applicationServerKey = urlB64ToUint8Array(this.params.applicationServerPublicKey);
       }
       subscription = await serviceWorkerRegistration.pushManager.subscribe(options)
     }

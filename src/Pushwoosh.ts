@@ -6,7 +6,6 @@ import {
   getBrowserVersion,
   canUseServiceWorkers,
   getPushwooshUrl,
-  shallowEqual,
   getVersion
 } from './functions';
 import {
@@ -25,19 +24,29 @@ import {keyValue} from './storage';
 interface IInitParams  {
   applicationCode: string;
   safariWebsitePushID?: string;
-  serviceWorkerUrl?: string;
   autoSubscribe?: boolean;
   pushwooshUrl?: string;
   logLevel?: string;
   userId?: string;
   tags?: {[key: string]: any};
+  driversSettings?: {
+    worker?: {
+      serviceWorkerUrl?: string;
+      applicationServerPublicKey?: string;
+    }
+  };
 }
 
 interface IInitParamsWithDefaults extends IInitParams {
   autoSubscribe: boolean;
-  serviceWorkerUrl: string;
   pushwooshUrl: string;
-  tags: {Language: string, [key: string]: any}
+  tags: {Language: string, [key: string]: any};
+  driversSettings: {
+    worker: {
+      serviceWorkerUrl: string;
+      applicationServerPublicKey?: string;
+    }
+  };
 }
 
 const eventOnLoad = 'onLoad';
@@ -51,57 +60,66 @@ class Pushwoosh {
   private params: IInitParamsWithDefaults;
   private _initParams: IInitParams;
   private _ee: EventEmitter = new EventEmitter();
-  private _onPromises: {[key: string]: Promise<any>} = {};
-  private _onChains: {[key: string]: ChainFunction[]} = {};
+  private _onPromises: {[key: string]: Promise<ChainFunction>};
 
   public api: API;
   public driver: IPWDriver;
 
   constructor() {
-    this._onPromises[eventOnLoad] = new Promise(resolve => this._ee.once(eventOnLoad, resolve));
-    this._onPromises[eventOnReady] = new Promise(resolve => this._ee.once(eventOnReady, resolve));
-    this._onPromises[eventOnDenied] = new Promise(resolve => this._ee.once(eventOnDenied, resolve));
-    this._onChains[eventOnRegister] = [];
+    this._onPromises = {
+      [eventOnLoad]: new Promise(resolve => this._ee.once(eventOnLoad, resolve)),
+      [eventOnReady]: new Promise(resolve => this._ee.once(eventOnReady, resolve)),
+      [eventOnDenied]: new Promise(resolve => this._ee.once(eventOnDenied, resolve)),
+      [eventOnRegister]: new Promise(resolve => this._ee.once(eventOnRegister, resolve)),
+    };
   }
 
-  init(params: IInitParams) {
-    this._initParams  = params;
+  init(initParams: IInitParams) {
+    this._initParams  = initParams;
     if (!((isSafariBrowser() && getDeviceName() === 'PC') || canUseServiceWorkers())) {
       Logger.info('This browser does not support pushes');
       return;
     }
-    const {applicationCode} = params;
+    const {applicationCode} = initParams;
     if (!applicationCode) {
       throw new Error('no application code');
     }
 
-    this.params = {
+    const params = this.params = {
       autoSubscribe: false,
-      serviceWorkerUrl: defaultServiceWorkerUrl,
       pushwooshUrl: getPushwooshUrl(applicationCode),
-      ...params,
+      ...initParams,
       tags: {
         Language: navigator.language || 'en',
-        ...params.tags
+        ...initParams.tags
+      },
+      driversSettings: {
+        ...initParams.driversSettings,
+        worker: {
+          serviceWorkerUrl: defaultServiceWorkerUrl,
+          ...(initParams.driversSettings && initParams.driversSettings.worker),
+        }
       }
     };
 
     if (canUseServiceWorkers()) {
+      const {worker} = params.driversSettings;
       this.driver = new WorkerDriver({
         applicationCode: applicationCode,
-        serviceWorkerUrl: this.params.serviceWorkerUrl
+        serviceWorkerUrl: worker.serviceWorkerUrl,
+        applicationServerPublicKey: worker.applicationServerPublicKey,
       });
     }
 
     this._ee.emit(eventOnLoad);
 
-    if (this.params.autoSubscribe) {
+    if (params.autoSubscribe) {
       this.driver.getPermission().then(permission => {
         if (permission === 'denied') {
           this._ee.emit(eventOnDenied);
         }
         else {
-          this.subscribeAndRegister().catch(e => console.log(e));
+          this.subscribeAndRegister().catch(error => Logger.write('error', error));
         }
       });
     }
@@ -113,17 +131,16 @@ class Pushwoosh {
     }
     else
     if (Array.isArray(cmd)) {
-      switch (cmd[0]) {
+      const [cmdName, cmdFunc] = cmd;
+      switch (cmdName) {
         case 'init':
-          this.init(cmd[1]);
+          this.init(cmdFunc);
           break;
         case eventOnLoad:
         case eventOnReady:
         case eventOnDenied:
-          this._onPromises[cmd[0]].then(cmd[1]);
-          break;
         case eventOnRegister:
-          this._onChains[eventOnRegister].push(cmd[1]);
+          this._onPromises[cmdName].then(params => cmdFunc(params));
           break;
         default:
           throw new Error('unknown command');
@@ -163,13 +180,12 @@ class Pushwoosh {
       throw new Error('not subscribed');
     }
     await this.api.registerDevice();
+    const {params} = this;
     await Promise.all([
-      this.api.setTags({
-        ...this.params.tags,
-        'Device Model': getBrowserVersion(),
-      }),
-      this.params.userId && this.api.registerUser()
+      this.api.setTags({...params.tags, 'Device Model': getBrowserVersion()}),
+      params.userId && this.api.registerUser()
     ]);
+    this._ee.emit(eventOnRegister, {params});
   }
 
   async subscribeAndRegister() {
@@ -185,7 +201,7 @@ class Pushwoosh {
 
     const shouldRegister = !(
       getVersion() === savedSDKVersion &&
-      shallowEqual(savedApiParams, apiParams) &&
+      JSON.stringify(savedApiParams) === JSON.stringify(apiParams) &&
       JSON.stringify(savedInitParams) === JSON.stringify(this.params)
     );
 
@@ -211,7 +227,6 @@ class Pushwoosh {
       ]);
     }
   }
-
 }
 
 export default Pushwoosh;
