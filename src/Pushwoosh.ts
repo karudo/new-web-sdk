@@ -33,29 +33,35 @@ interface IInitParams  {
   tags?: {[key: string]: any};
 }
 
-interface IInitParamsWithDefauls extends IInitParams {
+interface IInitParamsWithDefaults extends IInitParams {
   autoSubscribe: boolean;
   serviceWorkerUrl: string;
   pushwooshUrl: string;
   tags: {Language: string, [key: string]: any}
 }
 
-const eventOnLoad = 'event-onLoad';
-const eventOnReady = 'event-onReady';
+const eventOnLoad = 'onLoad';
+const eventOnReady = 'onReady';
+const eventOnDenied = 'onDenied';
+const eventOnRegister = 'onRegister';
+
+type ChainFunction = (param: any) => Promise<any> | any;
 
 class Pushwoosh {
-  private params: IInitParamsWithDefauls;
+  private params: IInitParamsWithDefaults;
   private _initParams: IInitParams;
   private _ee: EventEmitter = new EventEmitter();
-  private _onLoadPromise: Promise<any>;
-  private _onReadyPromise: Promise<any>;
+  private _onPromises: {[key: string]: Promise<any>} = {};
+  private _onChains: {[key: string]: ChainFunction[]} = {};
 
   public api: API;
   public driver: IPWDriver;
 
   constructor() {
-    this._onLoadPromise = new Promise(resolve => this._ee.once(eventOnLoad, resolve));
-    this._onReadyPromise = new Promise(resolve => this._ee.once(eventOnReady, resolve));
+    this._onPromises[eventOnLoad] = new Promise(resolve => this._ee.once(eventOnLoad, resolve));
+    this._onPromises[eventOnReady] = new Promise(resolve => this._ee.once(eventOnReady, resolve));
+    this._onPromises[eventOnDenied] = new Promise(resolve => this._ee.once(eventOnDenied, resolve));
+    this._onChains[eventOnRegister] = [];
   }
 
   init(params: IInitParams) {
@@ -92,7 +98,7 @@ class Pushwoosh {
     if (this.params.autoSubscribe) {
       this.driver.getPermission().then(permission => {
         if (permission === 'denied') {
-          Logger.info('Permission denied');
+          this._ee.emit(eventOnDenied);
         }
         else {
           this.subscribeAndRegister().catch(e => console.log(e));
@@ -102,20 +108,22 @@ class Pushwoosh {
   }
 
   push(cmd: any) {
-    /*if (typeof cmd === 'function') {
-      this._runOnLoad(() => cmd());
+    if (typeof cmd === 'function') {
+      this.push([eventOnLoad, cmd]);
     }
-    else */
+    else
     if (Array.isArray(cmd)) {
       switch (cmd[0]) {
         case 'init':
           this.init(cmd[1]);
           break;
-        case 'onLoad':
-          this._onLoadPromise.then(cmd[1]);
+        case eventOnLoad:
+        case eventOnReady:
+        case eventOnDenied:
+          this._onPromises[cmd[0]].then(cmd[1]);
           break;
-        case 'onReady':
-          this._onReadyPromise.then(cmd[1]);
+        case eventOnRegister:
+          this._onChains[eventOnRegister].push(cmd[1]);
           break;
         default:
           throw new Error('unknown command');
@@ -157,7 +165,7 @@ class Pushwoosh {
     await this.api.registerDevice();
     await Promise.all([
       this.api.setTags({
-          ...this.params.tags,
+        ...this.params.tags,
         'Device Model': getBrowserVersion(),
       }),
       this.params.userId && this.api.registerUser()
@@ -204,9 +212,6 @@ class Pushwoosh {
     }
   }
 
-  private _runOnLoad(func: any) {
-    return this._onLoadPromise.then(func);
-  }
 }
 
 export default Pushwoosh;
