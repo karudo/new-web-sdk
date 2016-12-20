@@ -15,7 +15,7 @@ export default function createDoApiXHR(pushwooshUrl: string) {
             try {
               const response = JSON.parse(xhr.responseText);
               if (response.status_code == 200) {
-                Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(response.response)}`);
+                Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(response.response)}`, 'createDoApiXHR');
                 resolve(response.response);
               }
               else {

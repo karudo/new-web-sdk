@@ -1,10 +1,3 @@
-import {
-  getBrowserVersion,
-  getDeviceName,
-  getBrowserType
-} from './functions';
-
-
 type TDoPushwooshMethod = (type: string, params: any) => Promise<any>
 
 export default class PushwooshAPI {
@@ -35,9 +28,8 @@ export default class PushwooshAPI {
       auth_token: params.authToken,
       language: params.language,
       timezone: this.timezone,
-      device_model: getBrowserVersion(),
-      device_name: getDeviceName(),
-      device_type: getBrowserType(),
+      device_model: params.deviceModel,
+      device_type: params.deviceType,
     });
   }
 
@@ -48,15 +40,15 @@ export default class PushwooshAPI {
   registerUser() {
     return this.callAPI('registerUser', {
       timezone: this.timezone,
-      device_type: getBrowserType(),
+      device_type: this.params.deviceType,
     });
   }
 
   applicationOpen() {
     return this.callAPI('applicationOpen', {
       push_token: this.params.pushToken,
+      device_type: this.params.deviceType,
       timezone: this.timezone,
-      device_type: getBrowserType()
     });
   }
 

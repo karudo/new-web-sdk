@@ -7,7 +7,7 @@ interface IDBObjectStoreEx extends IDBObjectStore {
 }
 
 const objectStoreKeyValueName = 'keyValue';
-const objectStoreLogName = 'log';
+const objectStoreLogName = 'logs';
 const objectStoreMessagesName = 'messages';
 
 
@@ -19,7 +19,7 @@ let databasePromise: Promise<IDBDatabase>;
 function getInstance(): Promise<IDBDatabase> {
   if (!databasePromise) {
     databasePromise = new Promise<IDBDatabase>((resolve, reject) => {
-      const request: IDBOpenDBRequest = indexedDB.open('PUSHWOOSH_SDK_STORE', 3);
+      const request: IDBOpenDBRequest = indexedDB.open('PUSHWOOSH_SDK_STORE', 6);
       request.onsuccess = (event) => {
         const database: IDBDatabase = (event.target as IEevetTargetWithResult).result;
         database.onversionchange = onversionchange;
@@ -40,6 +40,7 @@ function getInstance(): Promise<IDBDatabase> {
         const uniqueFalse = {unique: false};
         if (!database.objectStoreNames.contains(objectStoreLogName)) {
           const logStore = database.createObjectStore(objectStoreLogName, autoIncrementId);
+          logStore.createIndex('environment', 'environment', uniqueFalse);
           logStore.createIndex('date', 'date', uniqueFalse);
           logStore.createIndex('type', 'type', uniqueFalse);
         }
@@ -105,12 +106,38 @@ function createKeyValue(name: string) {
 
 
 abstract class LogBase {
-  protected name: string;
+  protected abstract name: string;
+  protected abstract maxItems: number;
   _add(obj: any) {
     return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
       const request = database.transaction([this.name], 'readwrite').objectStore(this.name).add(obj);
       request.onsuccess = () => {
-        resolve();
+        resolve(obj);
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
+    }).then((obj: any) => {
+      return this.getAll().then((items: {id: number}[]) => {
+        if (Array.isArray(items)) {
+          const ids = items.map(i => i.id).sort((a, b) => {
+            if (a == b) return 0;
+            return a < b ? 1 : -1;
+          });
+          if (ids.length > this.maxItems) {
+            return Promise.all(ids.slice(this.maxItems).map(id => this.delete(id))).then(() => obj)
+          }
+        }
+        return obj;
+      });
+    });
+  }
+
+  delete(key: any) {
+    return getInstanceWithPromise((database: IDBDatabase, resolve: any, reject: any) => {
+      const request = database.transaction([this.name], 'readwrite').objectStore(this.name).delete(key);
+      request.onsuccess = () => {
+        resolve(request.result);
       };
       request.onerror = () => {
         reject(request.error);
@@ -133,13 +160,28 @@ abstract class LogBase {
 
 class LogLog extends LogBase {
   protected name = objectStoreLogName;
-  add(type: string, message: any) {
-    return this._add({type, message: `${message}`, date: new Date});
+  protected maxItems = 100;
+  protected environment = (typeof self !== 'undefined' && self.registration) ? 'worker' : 'browser';
+  add(type: string, message: any, additional?: any) {
+    const obj: any = {
+      type,
+      environment: this.environment,
+      message: `${message}`,
+      date: new Date
+    };
+    if (message instanceof Error) {
+      obj.stack = message.stack;
+    }
+    if (additional) {
+      obj.additional = additional;
+    }
+    return this._add(obj);
   }
 }
 
 class LogMessage extends LogBase {
   protected name = objectStoreMessagesName;
+  protected maxItems = 25;
   add(log: any) {
     return this._add({
       ...log,

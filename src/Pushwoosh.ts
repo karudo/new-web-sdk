@@ -4,6 +4,7 @@ import {
   isSafariBrowser,
   getDeviceName,
   getBrowserVersion,
+  getBrowserType,
   canUseServiceWorkers,
   getPushwooshUrl,
   getVersion
@@ -19,35 +20,7 @@ import {
 import Logger from './logger'
 import WorkerDriver from './drivers/worker';
 import createDoApiXHR from './createDoApiXHR';
-import {keyValue} from './storage';
-
-interface IInitParams  {
-  applicationCode: string;
-  safariWebsitePushID?: string;
-  autoSubscribe?: boolean;
-  pushwooshUrl?: string;
-  logLevel?: string;
-  userId?: string;
-  tags?: {[key: string]: any};
-  driversSettings?: {
-    worker?: {
-      serviceWorkerUrl?: string;
-      applicationServerPublicKey?: string;
-    }
-  };
-}
-
-interface IInitParamsWithDefaults extends IInitParams {
-  autoSubscribe: boolean;
-  pushwooshUrl: string;
-  tags: {Language: string, [key: string]: any};
-  driversSettings: {
-    worker: {
-      serviceWorkerUrl: string;
-      applicationServerPublicKey?: string;
-    }
-  };
-}
+import {keyValue, log as logStorage, message as messageStorage} from './storage';
 
 const eventOnLoad = 'onLoad';
 const eventOnReady = 'onReady';
@@ -64,6 +37,21 @@ class Pushwoosh {
 
   public api: API;
   public driver: IPWDriver;
+
+  public debug = {
+    async showLog() {
+      const items = await logStorage.getAll();
+      console.log(items);
+    },
+    async showKeyValues() {
+      const items = await keyValue.getAll();
+      console.log(items);
+    },
+    async showMessages() {
+      const items = await messageStorage.getAll();
+      items.forEach((i: any) => console.log(i));
+    }
+  };
 
   constructor() {
     this._onPromises = {
@@ -89,12 +77,13 @@ class Pushwoosh {
       autoSubscribe: false,
       pushwooshUrl: getPushwooshUrl(applicationCode),
       ...initParams,
+      deviceType: getBrowserType(),
       tags: {
         Language: navigator.language || 'en',
-        ...initParams.tags
+        ...initParams.tags,
+        'Device Model': getBrowserVersion(),
       },
       driversSettings: {
-        ...initParams.driversSettings,
         worker: {
           serviceWorkerUrl: defaultServiceWorkerUrl,
           ...(initParams.driversSettings && initParams.driversSettings.worker),
@@ -119,7 +108,7 @@ class Pushwoosh {
           this._ee.emit(eventOnDenied);
         }
         else {
-          this.subscribeAndRegister().catch(error => Logger.write('error', error));
+          this.subscribeAndRegister().catch(error => Logger.write('error', error, 'subscribeAndRegister fail'));
         }
       });
     }
@@ -161,6 +150,8 @@ class Pushwoosh {
     const {params} = this;
     let apiParams: TPWAPIParams = {
       ...driverApiParams,
+      deviceType: params.deviceType,
+      deviceModel: params.tags['Device Model'],
       applicationCode: params.applicationCode,
       language: params.tags.Language,
     };
@@ -182,7 +173,7 @@ class Pushwoosh {
     await this.api.registerDevice();
     const {params} = this;
     await Promise.all([
-      this.api.setTags({...params.tags, 'Device Model': getBrowserVersion()}),
+      this.api.setTags({...params.tags}),
       params.userId && this.api.registerUser()
     ]);
     this._ee.emit(eventOnRegister, {params});

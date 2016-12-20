@@ -15,6 +15,8 @@ interface IPWDriverAPIParams {
 
 interface TPWAPIParams extends IPWDriverAPIParams {
   applicationCode: string;
+  deviceType: number;
+  deviceModel: string;
   language: string;
   userId?: string;
 }
@@ -35,8 +37,50 @@ interface ServiceWorkerRegistration {
   showNotification(a: any, b: any): Promise<any>;
 }
 
+interface IInitParams  {
+  applicationCode: string;
+  safariWebsitePushID?: string;
+  autoSubscribe?: boolean;
+  pushwooshUrl?: string;
+  logLevel?: string;
+  userId?: string;
+  tags?: {[key: string]: any};
+  driversSettings?: {
+    worker?: {
+      serviceWorkerUrl?: string;
+      applicationServerPublicKey?: string;
+    }
+  };
+}
+
+interface IInitParamsWithDefaults extends IInitParams {
+  autoSubscribe: boolean;
+  pushwooshUrl: string;
+  deviceType: number;
+  tags: {
+    Language: string,
+    'Device Model': string,
+    [key: string]: any
+  };
+  driversSettings: {
+    worker: {
+      serviceWorkerUrl: string;
+      applicationServerPublicKey?: string;
+    }
+  };
+}
+
+type TPWCanWaitCallback = (f: any) => Promise<any> | any;
+
+interface IWorkerPushwooshGlobal {
+  push(listener: ['onPush', TPWCanWaitCallback]): void;
+  getListeners(eventName: string): TPWCanWaitCallback[];
+  api: any;
+  initApi: any;
+}
+
 interface Window {
-  Pushwoosh: any[];
+  Pushwoosh: IWorkerPushwooshGlobal;
 }
 interface PushMessageData {
   json(): any;

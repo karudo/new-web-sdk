@@ -4,7 +4,7 @@ export function getGlobal() {
 
 declare const __VERSION__: string;
 export function getVersion() {
-  return __VERSION__ + '2';
+  return __VERSION__ + '5';
 }
 
 export function isSafariBrowser() {
@@ -19,7 +19,7 @@ export function getBrowserType(): 10 | 11 | 12 {
   if (isSafariBrowser()) {
     return 10;
   }
-  return navigator.userAgent.toLowerCase().indexOf('firefox') > -1 ? 12 : 11;
+  return ~navigator.userAgent.toLowerCase().indexOf('firefox') ? 12 : 11;
 }
 
 export function getBrowserVersion() {

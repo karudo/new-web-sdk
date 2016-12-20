@@ -1,6 +1,6 @@
 import {log as logStorage} from './storage';
 
-type TWriteType = 'error' | 'apirequest';
+type TWriteType = 'error' | 'apirequest' | 'info';
 
 const levels: {[key: string]: number} = {
   error: 1,
@@ -15,7 +15,7 @@ interface ILogger {
   error(...args: any[]): void;
   info(...args: any[]): void;
   debug(...args: any[]): void;
-  write(type: TWriteType, message: any): Promise<void>;
+  write(type: TWriteType, message: any, additional?: any): Promise<void>;
   [key: string]: any;
 }
 
@@ -26,14 +26,14 @@ const Logger: ILogger = {
     }
     numLevel = levels[level];
   },
-  write(type: TWriteType, message: any) {
+  write(type: TWriteType, message: any, additional?: any) {
     if (type === 'error') {
       this.error(message);
     }
     else {
       this.info(message);
     }
-    return logStorage.add(type, message);
+    return logStorage.add(type, message, additional);
   }
 } as ILogger;
 
@@ -49,13 +49,13 @@ Object.keys(levels).forEach((k: string) => {
 
 export function logAndThrowError(error: string) {
   const logText = new Error(error);
-  Logger.write('error', logText);
+  Logger.write('error', logText, 'logAndThrowError');
   throw logText;
 }
 
 export function logAndRejectError(error: string, reject: (e: any) => void) {
   const logText = new Error(error);
-  Logger.write('error', logText);
+  Logger.write('error', logText, 'logAndRejectError');
   reject(logText);
 }
 

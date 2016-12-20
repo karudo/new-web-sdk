@@ -17,7 +17,7 @@ export default function createDoApiFetch(pushwooshUrl: string) {
         if (json.status_code != 200) {
           logAndThrowError(`Error occurred during the ${methodName} call to Pushwoosh: ${json.status_message}`);
         }
-        Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(json.response)}`);
+        Logger.write('apirequest', `${methodName} call with arguments: ${JSON.stringify(request)} to Pushwoosh has been successful. Result: ${JSON.stringify(json.response)}`, 'createDoApiFetch');
         return json.response;
       });
     });
