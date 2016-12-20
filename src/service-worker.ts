@@ -15,12 +15,8 @@ import WorkerPushwooshGlobal from './worker/global';
 import PushwooshNotification from './worker/notification';
 
 declare const caches: Cache;
-declare const clients: any;
 
-self.Pushwoosh = new WorkerPushwooshGlobal();
-
-async function getApi() {
-}
+const Pushwoosh = self.Pushwoosh = new WorkerPushwooshGlobal();
 
 async function onPush(event: PushEvent) {
   try {
@@ -33,7 +29,7 @@ async function onPush(event: PushEvent) {
       openUrl: payload.l || defaultNotificationUrl,
       messageHash: payload.p
     });
-    const callbacks = self.Pushwoosh.getListeners('onPush');
+    const callbacks = Pushwoosh.getListeners('onPush');
     await callbacks.reduce((pr, fun) => pr.then(() => fun(notification)), Promise.resolve());
     await Promise.all([
       notification.show(),
@@ -55,10 +51,9 @@ async function onPush(event: PushEvent) {
 async function onClick(event: NotificationEvent) {
   let tag = JSON.parse(event.notification.tag);
   event.notification.close();
-  await self.Pushwoosh.initApi();
   await Promise.all([
-    clients.openWindow(tag.url),
-    self.Pushwoosh.initApi().then(() => self.Pushwoosh.api.pushStat(tag.messageHash))
+    self.clients.openWindow(tag.url),
+    Pushwoosh.initApi().then(() => Pushwoosh.api.pushStat(tag.messageHash))
   ]);
 }
 
