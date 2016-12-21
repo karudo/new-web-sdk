@@ -103,14 +103,7 @@ class Pushwoosh {
     this._ee.emit(eventOnLoad);
 
     if (params.autoSubscribe) {
-      this.driver.getPermission().then(permission => {
-        if (permission === 'denied') {
-          this._ee.emit(eventOnDenied);
-        }
-        else {
-          this.subscribeAndRegister().catch(error => Logger.write('error', error, 'subscribeAndRegister fail'));
-        }
-      });
+      this.defaultProcess();
     }
   }
 
@@ -216,6 +209,21 @@ class Pushwoosh {
         keyValue.set(keyLastSentAppOpen, curTime),
         this.api.applicationOpen()
       ]);
+    }
+  }
+
+  async defaultProcess() {
+    const permission = await this.driver.getPermission();
+    if (permission === 'denied') {
+      this._ee.emit(eventOnDenied);
+    }
+    else {
+      try {
+        await this.subscribeAndRegister();
+      }
+      catch (error) {
+        Logger.write('error', error, 'subscribeAndRegister fail');
+      }
     }
   }
 }
